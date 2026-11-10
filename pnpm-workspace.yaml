@@ -1,0 +1,5 @@
+# Only install versions published at least three days ago, so a compromised release has time to be caught.
+minimumReleaseAge: 4320
+
+allowBuilds:
+  esbuild: true
