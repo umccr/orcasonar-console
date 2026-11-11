@@ -31,8 +31,12 @@ import { NUMERIC_COLUMN } from '@/lib/table';
 import { useCursorPages } from '@/hooks/use-cursor-pages';
 import { formatCompact, formatDuration, formatInteger, formatUsd, plural } from '@/lib/format';
 import { resetKeyOf, type AuditTableProps } from './audit-table';
+import { callerName, otherCaller } from './other-caller';
 
-/** The audit log by conversation, most recently active first, each with what its exchanges in the window add up to. */
+/**
+ * The audit log by conversation, most recently active first, a row for each caller in one, each with what their
+ * exchanges in the window add up to.
+ */
 export function ConversationsTable({
   params,
   onOpen,
@@ -54,7 +58,9 @@ export function ConversationsTable({
     state: { expanded, columnVisibility },
     onExpandedChange: setExpanded,
     onColumnVisibilityChange: setColumnVisibility,
-    getRowId: (conversation: AuditConversation) => conversation.conversationId,
+    // A conversation has a row for each caller in it, as a follow-up someone else was refused is theirs.
+    getRowId: (conversation: AuditConversation) =>
+      `${conversation.conversationId}#${conversation.caller.id}`,
     getRowCanExpand: () => true,
     manualPagination: true,
     enableSorting: false,
@@ -80,7 +86,7 @@ export function ConversationsTable({
         <TableToolbar
           summary={
             <span className='font-medium text-foreground'>
-              {query.data ? plural(query.data.total, 'conversation') : 'Conversations'}
+              {query.data ? plural(query.data.total, 'row') : 'Conversations'}
             </span>
           }
         >
@@ -258,31 +264,40 @@ function ConversationPreview({
         />
       ) : (
         <ul className='divide-y overflow-hidden rounded-lg border bg-card'>
-          {query.data.exchanges.map((exchange) => (
-            <li
-              key={exchange.exchangeId}
-              className='grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-3 px-3 py-1.5 sm:grid-cols-[4.5rem_minmax(0,1fr)_auto_5rem_4.5rem_5rem]'
-            >
-              <TimeText
-                value={exchange.at}
-                format='seconds'
-                className='text-xs text-muted-foreground tabular-nums'
-              />
-              <span className='truncate' title={exchange.question}>
-                {exchange.question}
-              </span>
-              <OutcomeBadge outcome={exchange.outcome} />
-              <span className='hidden text-end text-xs text-muted-foreground sm:block'>
-                {plural(exchange.sources?.length ?? 0, 'source')}
-              </span>
-              <span className='hidden text-end text-xs text-muted-foreground tabular-nums sm:block'>
-                {exchange.latencyMs === undefined ? '–' : formatDuration(exchange.latencyMs)}
-              </span>
-              <span className='hidden text-end text-xs font-medium tabular-nums sm:block'>
-                {exchange.costUsd === undefined ? '–' : formatUsd(exchange.costUsd, 4)}
-              </span>
-            </li>
-          ))}
+          {query.data.exchanges.map((exchange) => {
+            const askedBy = otherCaller(exchange, query.data.exchanges[0]);
+            return (
+              <li
+                key={exchange.exchangeId}
+                className='grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-3 px-3 py-1.5 sm:grid-cols-[4.5rem_minmax(0,1fr)_auto_5rem_4.5rem_5rem]'
+              >
+                <TimeText
+                  value={exchange.at}
+                  format='seconds'
+                  className='text-xs text-muted-foreground tabular-nums'
+                />
+                <span className='truncate' title={exchange.question}>
+                  {exchange.question}
+                  {askedBy && (
+                    <span className='text-muted-foreground' title={askedBy.id}>
+                      {' '}
+                      · asked by {callerName(askedBy)}
+                    </span>
+                  )}
+                </span>
+                <OutcomeBadge outcome={exchange.outcome} />
+                <span className='hidden text-end text-xs text-muted-foreground sm:block'>
+                  {plural(exchange.sources?.length ?? 0, 'source')}
+                </span>
+                <span className='hidden text-end text-xs text-muted-foreground tabular-nums sm:block'>
+                  {exchange.latencyMs === undefined ? '–' : formatDuration(exchange.latencyMs)}
+                </span>
+                <span className='hidden text-end text-xs font-medium tabular-nums sm:block'>
+                  {exchange.costUsd === undefined ? '–' : formatUsd(exchange.costUsd, 4)}
+                </span>
+              </li>
+            );
+          })}
         </ul>
       )}
       <Button variant='link' size='sm' className='h-auto px-0' onClick={onOpen}>

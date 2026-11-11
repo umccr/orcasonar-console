@@ -50,15 +50,19 @@ what it cost; the platform team tries the chat and search API and judges the ans
 costUsd, inputTokens, outputTokens, lastAt}`. Every reader comes back at once.
 - **Conversation row:** `{conversationId, caller {id, email, clientId}, startedAt, lastAt, firstQuestion,
 questions, answered, notCovered, failed, sites, inputTokens, outputTokens, guardrailInterventions, costUsd}`, plus
-  `total`. The totals cover the window; the pop-up has the whole conversation.
+  `total`, which counts rows. A conversation has a row for each caller in it: another reader's row holds follow-ups
+  they were refused, so rows are keyed by `conversationId` and `caller.id`. The totals cover the window; the pop-up
+  has the whole conversation, and names the caller of any turn its first reader didn't ask.
 - **Exchange row:** `{at, caller, outcome, errorCode?, question, answerPreview, sites, citations, costUsd,
 guardrail, latencyMs, conversationId, exchangeId}`, with no total.
-- **Conversation detail:** each exchange adds `answer` (Markdown), `sources [{ref, id, title, url, site, score}]`,
-  `modelId` and `usage`.
+- **Conversation detail:** each exchange adds `answer` (Markdown), `sources [{ref, id, title, url, site, snippet,
+score}]` (older ones only `{id, url, score}`), `modelId` and `usage`.
 - **Chat stream:** `meta {exchangeId, conversationId}`, `delta {text}`…, `citations [{ref, id, title, url, site,
 snippet, score}]`, then `done {usage, costUsd}`.
 - **Your history:** list items `{conversationId, title, startedAt, lastAt, questions}`; each exchange
-  `{exchangeId, at, question, answer, citations}`. No tokens or cost, and failed questions are left out.
+  `{exchangeId, at, question, answer, citations}`, the reader's own only. No tokens or cost, and failed questions are
+  left out. A later page can hold a conversation made recent since the first, so the list is sorted again by
+  `lastAt`.
 - **Search:** `{results: [{id, title, url, site, snippet, score}]}`, `topK` 1 to 20.
 
 ## Rules the design follows

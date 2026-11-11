@@ -118,9 +118,10 @@ export interface paths {
     };
     /**
      * One of your conversations, oldest first
-     * @description The questions and answers of one of the reader's own conversations, with the pages each answer cited, to show
-     *     it again; `POST /chat` with its `conversationId` continues it. Questions that failed are left out. Another
-     *     reader's conversation is `403`, as it is for a follow-up; one that history does not hold is `404`.
+     * @description The reader's own questions and answers in one of their conversations, with the pages each answer cited, to
+     *     show it again; `POST /chat` with its `conversationId` continues it. Questions that failed are left out, and so
+     *     is anything another reader asked in it. Another reader's conversation is `403`, as it is for a follow-up; one
+     *     that history does not hold is `404`.
      */
     get: {
       parameters: {
@@ -360,11 +361,14 @@ export interface paths {
     };
     /**
      * The audit log by conversation, most recently active first (administrators only)
-     * @description Each conversation with exchanges in the window: who asked, the first question, and what its exchanges in the
-     *     window add up to. A conversation that began before the window counts only the exchanges inside it;
-     *     `/audit/conversations/{conversationId}` has all of it. `caller` keeps one reader's conversations, and `outcome`
-     *     those with at least one exchange that ended that way. `total` counts every conversation that matches, across
-     *     pages. Access and paging are as for `/audit/exchanges`.
+     * @description Each conversation with exchanges in the window, a row for each caller in it: who asked, the first question,
+     *     and what their exchanges in the window add up to. Only its owner can continue a conversation, so another
+     *     caller's row in it holds follow-ups that were refused (`failed`, with `errorCode` `forbidden` on
+     *     `/audit/exchanges`); they never add to the owner's row. Rows of one conversation share its `conversationId`. A
+     *     conversation that began before the window counts only the exchanges inside it;
+     *     `/audit/conversations/{conversationId}` has all of it. `caller` keeps one reader's rows, and `outcome` those
+     *     with at least one exchange that ended that way. `total` counts every row that matches, across pages. Access
+     *     and paging are as for `/audit/exchanges`.
      */
     get: {
       parameters: {
@@ -397,7 +401,7 @@ export interface paths {
               from: string;
               /** Format: date-time */
               to: string;
-              /** @description Conversations that match, on every page */
+              /** @description Rows that match, on every page */
               total: number;
               items: components['schemas']['AuditConversation'][];
               /** @description Present when there may be more; pass it as `cursor`. */
@@ -604,7 +608,7 @@ export interface components {
       /** @description The number the answer cites this source by: `[2]` cites the citation whose `ref` is 2 */
       ref: number;
     };
-    /** @description A page a saved answer cited. `ref` is the number the answer cites it by, as in `[2]`. Answers saved before `ref`, `title` and `site` were kept have only `id`, `url` and `score`. */
+    /** @description A page a saved answer cited, as the citation the reader was shown. `ref` is the number the answer cites it by, as in `[2]`. Answers saved before the whole citation was kept have only `id`, `url` and `score`. */
     CitedSource: {
       ref?: number;
       /** @description `<site>:<path>`, usable with /documents/{id} */
@@ -612,6 +616,7 @@ export interface components {
       title?: string;
       url: string;
       site?: string;
+      snippet?: string;
       score: number;
     };
     HistoryConversation: {
@@ -694,7 +699,7 @@ export interface components {
       guardrail?: 'none' | 'intervened';
       latencyMs?: number;
     };
-    /** @description A conversation's exchanges in the window, and what they add up to */
+    /** @description One caller's exchanges in a conversation in the window, and what they add up to */
     AuditConversation: {
       conversationId: string;
       caller: components['schemas']['AuditCaller'];

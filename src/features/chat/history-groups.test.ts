@@ -31,4 +31,22 @@ describe('history by day', () => {
       groupByDay([conversation('old', '2026-10-01T00:00:00Z')], now).map((g) => g.label)
     ).toEqual(['Earlier']);
   });
+
+  it('puts each group latest first, though a later page held a conversation made recent since the first', () => {
+    const now = Date.parse('2026-11-05T22:00:00Z');
+    // The first page, then the second, which holds one asked in just before the first page was read.
+    const groups = groupByDay(
+      [
+        conversation('first-page', '2026-11-05T20:00:00Z'),
+        conversation('older', '2026-10-30T01:00:00Z'),
+        conversation('second-page', '2026-11-05T21:58:00Z'),
+        conversation('oldest', '2026-10-29T01:00:00Z'),
+      ],
+      now
+    );
+    expect(groups.map((group) => [group.label, group.items.map((item) => item.title)])).toEqual([
+      ['Today', ['second-page', 'first-page']],
+      ['Earlier', ['older', 'oldest']],
+    ]);
+  });
 });

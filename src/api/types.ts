@@ -19,8 +19,9 @@ export type Usage = Schemas['Usage'];
 export type UsageCaller = AuditUsage['callers'][number];
 
 /**
- * A page an answer cites, live or saved. `ref` is the number the answer cites it by, as in `[2]`. Saved answers keep
- * no snippet, and those saved before titles were kept have no title or site either.
+ * A page an answer cites, live or saved. `ref` is the number the answer cites it by, as in `[2]`. A saved answer keeps
+ * each citation as the reader was shown it; those saved before the whole citation was kept have only `id`, `url` and
+ * `score`.
  */
 export interface AnswerSource {
   readonly ref: number;

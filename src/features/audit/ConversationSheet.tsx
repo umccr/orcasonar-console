@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link2, MessageSquarePlus } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useAuditConversation } from '@/api/queries';
-import { toAnswerSources, type AuditExchange } from '@/api/types';
+import { toAnswerSources, type AuditCaller, type AuditExchange } from '@/api/types';
 import { AnswerSources } from '@/components/answer-sources';
 import { CopyId } from '@/components/copy-id';
 import { copyText } from '@/lib/clipboard';
@@ -28,8 +28,12 @@ import {
   formatUsd,
 } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import { callerName, otherCaller } from './other-caller';
 
-/** One conversation from the audit log, over the list: every exchange, oldest first, as its reader saw it. */
+/**
+ * One conversation from the audit log, over the list: every exchange, oldest first, as its reader saw it. An exchange
+ * someone else asked, a follow-up they were refused, names who asked it.
+ */
 export function ConversationSheet({
   conversationId,
   exchangeId,
@@ -78,9 +82,7 @@ export function ConversationSheet({
           <SheetDescription className='flex flex-wrap items-center gap-x-3 gap-y-1'>
             {first ? (
               <>
-                <span className='font-medium text-foreground'>
-                  {first.caller.email ?? first.caller.id}
-                </span>
+                <span className='font-medium text-foreground'>{callerName(first.caller)}</span>
                 {last && (
                   <span>
                     {formatFullDateTime(first.at)} – {formatClock(last.at)}
@@ -110,6 +112,7 @@ export function ConversationSheet({
                   <AuditTurn
                     key={exchange.exchangeId}
                     exchange={exchange}
+                    askedBy={otherCaller(exchange, first)}
                     highlighted={exchange.exchangeId === exchangeId}
                   />
                 ))}
@@ -195,7 +198,16 @@ function ConversationStats({ exchanges }: { exchanges: readonly AuditExchange[] 
 
 const modelName = (modelId: string) => modelId.split('/').at(-1) ?? modelId;
 
-function AuditTurn({ exchange, highlighted }: { exchange: AuditExchange; highlighted: boolean }) {
+function AuditTurn({
+  exchange,
+  askedBy,
+  highlighted,
+}: {
+  exchange: AuditExchange;
+  /** Who asked it, when that is not who asked the first question. */
+  askedBy: AuditCaller | undefined;
+  highlighted: boolean;
+}) {
   const sources = useMemo(() => toAnswerSources(exchange.sources), [exchange.sources]);
   const [cited, setCited] = useState<number>();
   return (
@@ -210,11 +222,17 @@ function AuditTurn({ exchange, highlighted }: { exchange: AuditExchange; highlig
         <div className='max-w-[85%] rounded-2xl rounded-tr-sm bg-muted px-4 py-2.5 whitespace-pre-wrap'>
           {exchange.question}
         </div>
-        <TimeText
-          value={exchange.at}
-          format='seconds'
-          className='text-[11px] text-muted-foreground tabular-nums'
-        />
+        <div className='flex items-center gap-1.5 text-[11px] text-muted-foreground'>
+          {askedBy && (
+            <>
+              <span className='font-medium text-foreground' title={askedBy.id}>
+                Asked by {callerName(askedBy)}
+              </span>
+              <span aria-hidden='true'>·</span>
+            </>
+          )}
+          <TimeText value={exchange.at} format='seconds' className='tabular-nums' />
+        </div>
       </div>
       <div className='space-y-3 rounded-xl border bg-card p-4'>
         {exchange.outcome === 'failed' ? (

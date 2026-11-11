@@ -85,7 +85,7 @@ describe('the audit log', () => {
     const { user } = renderPage(<AuditLogPage />, '/audit');
 
     expect(await screen.findByText('How do I add a site?')).toBeInTheDocument();
-    expect(screen.getByText('2 conversations')).toBeInTheDocument();
+    expect(screen.getByText('2 rows')).toBeInTheDocument();
     expect(screen.getByText('2 answered')).toBeInTheDocument();
     expect(screen.getByText('1 failed')).toBeInTheDocument();
     expect(screen.getByText('$0.0341')).toBeInTheDocument();
@@ -112,5 +112,80 @@ describe('the audit log', () => {
     expect(await screen.findByText(/Add one entry to the site registry/)).toBeInTheDocument();
     expect(screen.getAllByText('Onboarding a repository').length).toBeGreaterThan(0);
     expect(screen.getByText('4,920 in / 388 out tokens')).toBeInTheDocument();
+  });
+
+  it('lists a follow-up refused for another reader as their own row, and names them on the turn they asked', async () => {
+    const owner = { id: 'sub-1', email: 'a.reader@umccr.org', clientId: 'docs-app' };
+    const other = { id: 'sub-2', email: 'b.reader@umccr.org', clientId: 'docs-app' };
+    const refused = {
+      ...conversation(C1, 'Mine now?'),
+      caller: other,
+      lastAt: '2026-11-05T04:00:00.000Z',
+      questions: 1,
+      answered: 0,
+      failed: 1,
+      inputTokens: 0,
+      outputTokens: 0,
+      guardrailInterventions: 0,
+      costUsd: 0,
+    };
+    answer((request) => {
+      const path = pathOf(request);
+      if (path.startsWith('/audit/usage')) {
+        return json(USAGE);
+      }
+      if (path.startsWith('/audit/conversations?')) {
+        // Both rows are the same conversation's: the owner's, and the refused reader's.
+        return json({
+          ...USAGE,
+          total: 2,
+          items: [refused, conversation(C1, 'How do I add a site?')],
+        });
+      }
+      if (path === `/audit/conversations/${C1}`) {
+        return json({
+          conversationId: C1,
+          exchanges: [
+            {
+              exchangeId: `x_${'a'.repeat(32)}`,
+              at: '2026-11-05T03:30:00.000Z',
+              caller: owner,
+              outcome: 'answered',
+              question: 'How do I add a site?',
+              answer: 'Add one entry to the site registry.',
+              sources: [],
+            },
+            {
+              exchangeId: `x_${'b'.repeat(32)}`,
+              at: '2026-11-05T04:00:00.000Z',
+              caller: other,
+              outcome: 'failed',
+              errorCode: 'forbidden',
+              question: 'Mine now?',
+            },
+          ],
+        });
+      }
+      return json({ error: { code: 'not-found', message: 'No such endpoint.' } }, 404);
+    });
+    const { user } = renderPage(<AuditLogPage />, '/audit');
+
+    expect(await screen.findByText('Mine now?')).toBeInTheDocument();
+    expect(screen.getByText('How do I add a site?')).toBeInTheDocument();
+    expect(screen.getByText('2 rows')).toBeInTheDocument();
+
+    // Each row expands on its own, though both are the same conversation.
+    await user.click(screen.getAllByRole('button', { name: 'Expand row' })[0]!);
+    expect(screen.getAllByRole('button', { name: 'Collapse row' })).toHaveLength(1);
+    expect(await screen.findByText('· asked by b.reader@umccr.org')).toBeInTheDocument();
+
+    // The conversation names its first reader, and the turn someone else asked names them.
+    // The row's own cell comes before the preview under it.
+    await user.click(screen.getAllByText('Mine now?')[0]!);
+    expect(await screen.findByText('Asked by b.reader@umccr.org')).toBeInTheDocument();
+    expect(screen.getAllByText(/Asked by/)).toHaveLength(1);
+    expect(
+      screen.getByText('a.reader@umccr.org', { selector: 'span.font-medium' })
+    ).toBeInTheDocument();
   });
 });
