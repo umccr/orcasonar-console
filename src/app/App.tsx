@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from 'react-router';
 import { useAuth } from '@/auth/auth-context';
@@ -27,9 +28,29 @@ export function App() {
   );
 }
 
+let router: ReturnType<typeof createAppRouter> | undefined;
+
+/**
+ * Drops what a reader's session left in memory when it ends, by signing out, a `401` or a failed token refresh: the
+ * cache of their audit and history queries, and the router with their place in the console. Signing in again goes
+ * through Cognito and reloads the page, but the next reader's console doesn't rely on that.
+ */
+const endConsoleSession = (): void => {
+  queryClient.clear();
+  router?.dispose();
+  router = undefined;
+};
+
 /** The console once the reader is signed in; until then, signing in. */
 function Gate() {
   const { state } = useAuth();
+  const signedOut = state.status === 'signed-out';
+  useEffect(() => {
+    // After the console has unmounted, so nothing still reads the cache or the router.
+    if (signedOut) {
+      endConsoleSession();
+    }
+  }, [signedOut]);
   if (API_BASE_URL === undefined) {
     return <UnsupportedHost />;
   }
@@ -47,10 +68,8 @@ function Gate() {
   }
 }
 
-let router: ReturnType<typeof createAppRouter> | undefined;
-
 function Console() {
-  // Made once, after signing in, from the page the reader asked for before Cognito sent them back to the root.
+  // Made once a session, after signing in, from the page the reader asked for before Cognito sent them to the root.
   router ??= (takeReturnPath(), createAppRouter());
   return <RouterProvider router={router} />;
 }
