@@ -1,0 +1,234 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+@import '@fontsource-variable/inter';
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * The portal's look, from orca-ui-v2's DESIGN.md: Inter at 13px, Instrument Slate neutrals, Signal Blue only for what
+ * is active or actionable, and one status vocabulary (success, warning, error). Dark mode is its own navy palette.
+ */
+@theme inline {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-sans);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* The Thirteen-Pixel Rule: body copy, and the components' small text, is 13px. */
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.5;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+  --color-invert-foreground: var(--invert-foreground);
+  --color-invert: var(--invert);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info-foreground: var(--info-foreground);
+  --color-info: var(--info);
+  --color-success-foreground: var(--success-foreground);
+  --color-destructive-foreground: var(--destructive-foreground);
+}
+
+:root {
+  --radius: 0.5rem;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+  --destructive: #ef4444;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #3b82f6;
+  --chart-1: #3b82f6;
+  --chart-2: #22c55e;
+  --chart-3: #f59e0b;
+  --chart-4: #ef4444;
+  --chart-5: #64748b;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #334155;
+  --sidebar-primary: #3b82f6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eff6ff;
+  --sidebar-accent-foreground: #2563eb;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #3b82f6;
+  /* Text on the status colours' tints, for ReUI's light badges. Info is Signal Blue, as DESIGN.md asks. */
+  --destructive-foreground: #b91c1c;
+  --success-foreground: #15803d;
+  --warning-foreground: #b45309;
+  --info: var(--primary);
+  --info-foreground: #1d4ed8;
+  --invert: #0f172a;
+  --invert-foreground: #f8fafc;
+}
+
+.dark {
+  --background: #101922;
+  --foreground: #f1f5f9;
+  --card: #111418;
+  --card-foreground: #f1f5f9;
+  --popover: #1e252e;
+  --popover-foreground: #f1f5f9;
+  --primary: #137fec;
+  --primary-foreground: #ffffff;
+  --secondary: #1e252e;
+  --secondary-foreground: #f1f5f9;
+  --muted: #1e252e;
+  --muted-foreground: #9dabb9;
+  --accent: #1e252e;
+  --accent-foreground: #f1f5f9;
+  --destructive: #ef4444;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --border: #2d3540;
+  --input: #2d3540;
+  --ring: #137fec;
+  --chart-1: #137fec;
+  --chart-2: #22c55e;
+  --chart-3: #f59e0b;
+  --chart-4: #ef4444;
+  --chart-5: #9dabb9;
+  --sidebar: #111418;
+  --sidebar-foreground: #cbd5e1;
+  --sidebar-primary: #137fec;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgb(19 127 236 / 0.16);
+  --sidebar-accent-foreground: #60a5fa;
+  --sidebar-border: #2d3540;
+  --sidebar-ring: #137fec;
+  --destructive-foreground: #f87171;
+  --success-foreground: #4ade80;
+  --warning-foreground: #fbbf24;
+  --info: var(--primary);
+  --info-foreground: #60a5fa;
+  --invert: #2d3540;
+  --invert-foreground: #f8fafc;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+  }
+  body {
+    @apply bg-background text-sm text-foreground antialiased;
+  }
+}
+
+/* An answer's Markdown, at the console's 13px. */
+@layer components {
+  .markdown {
+    @apply text-sm leading-relaxed break-words;
+  }
+  .markdown > * + * {
+    @apply mt-3;
+  }
+  .markdown :is(h1, h2, h3, h4, h5, h6) {
+    @apply mt-4 font-semibold text-foreground;
+  }
+  .markdown h1 {
+    @apply text-base;
+  }
+  .markdown h2 {
+    @apply text-[0.9375rem];
+  }
+  .markdown ul {
+    @apply list-disc ps-5;
+  }
+  .markdown ol {
+    @apply list-decimal ps-5;
+  }
+  .markdown li + li,
+  .markdown li > :is(ul, ol) {
+    @apply mt-1;
+  }
+  .markdown a:not([data-cite]) {
+    @apply text-primary underline-offset-2 hover:underline;
+  }
+  .markdown :not(pre) > code {
+    @apply rounded-sm bg-muted px-1 py-0.5 font-mono text-[0.85em];
+  }
+  .markdown pre {
+    @apply overflow-x-auto rounded-lg bg-muted p-3 font-mono text-xs leading-relaxed;
+  }
+  .markdown blockquote {
+    @apply border-s-2 ps-3 text-muted-foreground;
+  }
+  .markdown table {
+    @apply block w-full overflow-x-auto text-xs;
+  }
+  .markdown :is(th, td) {
+    @apply border px-2 py-1 text-start;
+  }
+  .markdown th {
+    @apply bg-muted font-semibold;
+  }
+  .markdown strong {
+    @apply font-semibold text-foreground;
+  }
+
+  /* A caret after the text while an answer streams in. */
+  .streaming-caret .markdown > :last-child::after {
+    content: '▍';
+    @apply ms-0.5 text-primary;
+    animation: caret-blink 1s steps(2, start) infinite;
+  }
+}
+
+@keyframes caret-blink {
+  to {
+    visibility: hidden;
+  }
+}
